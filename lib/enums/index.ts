@@ -3,3 +3,4 @@ export * from "./errors.enum";
 export * from "./limits.enum";
 export * from "./severity.enum";
 export * from "./googleApi.enum";
+export * from "./parser.enum";
