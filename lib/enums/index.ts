@@ -5,3 +5,4 @@ export * from "./severity.enum";
 export * from "./googleApi.enum";
 export * from "./parser.enum";
 export * from "./qualityCheck.enum";
+export * from "./httpStatus.enum";

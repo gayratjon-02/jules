@@ -1,4 +1,5 @@
 import type { ApiErrorCode } from "@/lib/enums";
+import type { IParsedDocument, IQualityReport } from "@/lib/interfaces";
 
 export type ApiError = {
   code: ApiErrorCode;
@@ -6,5 +7,10 @@ export type ApiError = {
 };
 
 export type ApiResponse<T> =
-  | { ok: true; data: T }
-  | { ok: false; error: ApiError };
+  | { success: true; data: T }
+  | { success: false; error: ApiError };
+
+export type DocumentRouteData = {
+  parsed: IParsedDocument;
+  report: IQualityReport;
+};

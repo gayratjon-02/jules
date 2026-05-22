@@ -5,6 +5,7 @@ export enum ErrorMessage {
   DOC_PARSE_FAILED = "Failed to parse document",
   UPLOAD_FAILED = "Failed to upload document",
   NOT_IMPLEMENTED = "Not implemented yet",
+  UNKNOWN_ERROR = "Unexpected error",
 }
 
 export enum ApiErrorCode {
@@ -14,4 +15,5 @@ export enum ApiErrorCode {
   DOC_FETCH_FAILED = "DOC_FETCH_FAILED",
   DOC_PARSE_FAILED = "DOC_PARSE_FAILED",
   UPLOAD_FAILED = "UPLOAD_FAILED",
+  UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
