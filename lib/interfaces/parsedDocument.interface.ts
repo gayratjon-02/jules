@@ -2,6 +2,8 @@ import type { IArticle } from "./article.interface";
 
 export interface IImage {
   src: string;
+  originalUrl: string;
+  driveFileId: string | null;
   alt: string;
   hasAltText: boolean;
   isGoogleDriveHosted: boolean;

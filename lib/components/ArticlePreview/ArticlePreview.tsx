@@ -33,7 +33,7 @@ export function ArticlePreview({ parsed }: ArticlePreviewProps) {
         </div>
       </header>
       <div
-        className="prose prose-slate prose-lg max-w-none px-8 py-8 prose-img:rounded-lg prose-img:shadow-sm prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
+        className="prose prose-slate prose-lg max-w-none px-8 py-8 prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline prose-img:max-h-96 prose-img:w-auto prose-img:max-w-full prose-img:rounded-lg prose-img:shadow-sm"
         dangerouslySetInnerHTML={{ __html: article.html }}
       />
     </article>

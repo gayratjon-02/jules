@@ -11,6 +11,11 @@ export enum ParserPattern {
   GOOGLE_DRIVE_FILE_PATH = "/file/",
   IMAGE_ANCHOR_PATTERN = "^IMAGE\\s*\\d+$",
   ALT_TAG_PATTERN = "Alt\\s*tag:\\s*[\"\\u201C\\u201D](.+?)[\"\\u201C\\u201D]",
+  DRIVE_FILE_ID_FILE_PATH_PATTERN = "/file/d/([a-zA-Z0-9_-]+)",
+  DRIVE_FILE_ID_QUERY_PATTERN = "[?&]id=([a-zA-Z0-9_-]+)",
+  DRIVE_FILE_ID_D_PATH_PATTERN = "/d/([a-zA-Z0-9_-]+)",
+  DRIVE_THUMBNAIL_URL_TEMPLATE = "https://drive.google.com/thumbnail?id={id}&sz=w1200",
+  DRIVE_THUMBNAIL_PLACEHOLDER = "{id}",
 }
 
 export enum HtmlTag {

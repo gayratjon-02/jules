@@ -64,6 +64,12 @@ const PRODUCT_URL_PATTERNS: readonly ParserPattern[] = [
   ParserPattern.ITEM_URL_SEGMENT,
 ];
 
+const DRIVE_FILE_ID_REGEXES: readonly RegExp[] = [
+  new RegExp(ParserPattern.DRIVE_FILE_ID_FILE_PATH_PATTERN),
+  new RegExp(ParserPattern.DRIVE_FILE_ID_QUERY_PATTERN),
+  new RegExp(ParserPattern.DRIVE_FILE_ID_D_PATH_PATTERN),
+];
+
 interface MetaExtraction {
   metaTitle: string;
   metaDescription: string;
@@ -72,6 +78,8 @@ interface MetaExtraction {
 
 interface ImageLinkInfo {
   src: string;
+  originalUrl: string;
+  driveFileId: string | null;
   alt: string;
   altParagraphIndex: number | null;
 }
@@ -162,8 +170,15 @@ export class ParserService {
 
       const { alt, altParagraphIndex } = this.findAltTag(content, index);
 
+      const driveFileId = this.extractDriveFileId(imageLink.url);
+      const src = driveFileId
+        ? this.toDriveThumbnailUrl(driveFileId)
+        : imageLink.url;
+
       result.set(index, {
-        src: imageLink.url,
+        src,
+        originalUrl: imageLink.url,
+        driveFileId,
         alt,
         altParagraphIndex,
       });
@@ -272,7 +287,8 @@ export class ParserService {
   }
 
   private renderImageLink(info: ImageLinkInfo): string {
-    return `<${HtmlTag.IMG} src="${this.escapeHtml(info.src)}" alt="${this.escapeHtml(info.alt)}" />`;
+    const imgTag = `<${HtmlTag.IMG} src="${this.escapeHtml(info.src)}" alt="${this.escapeHtml(info.alt)}" loading="lazy" />`;
+    return `<${HtmlTag.A} href="${this.escapeHtml(info.originalUrl)}" target="_blank" rel="noopener noreferrer">${imgTag}</${HtmlTag.A}>`;
   }
 
   private renderParagraph(
@@ -331,7 +347,7 @@ export class ParserService {
     if (!src) return EMPTY;
 
     const alt = embedded?.title ?? embedded?.description ?? EMPTY;
-    return `<${HtmlTag.IMG} src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`;
+    return `<${HtmlTag.IMG} src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" loading="lazy" />`;
   }
 
   private extractImages(
@@ -348,6 +364,8 @@ export class ParserService {
       const alt = embedded?.title ?? embedded?.description ?? EMPTY;
       images.push({
         src,
+        originalUrl: src,
+        driveFileId: null,
         alt,
         hasAltText: alt.trim().length > 0,
         isGoogleDriveHosted: this.isGoogleDriveUrl(src),
@@ -357,6 +375,8 @@ export class ParserService {
     for (const info of imageLinks.values()) {
       images.push({
         src: info.src,
+        originalUrl: info.originalUrl,
+        driveFileId: info.driveFileId,
         alt: info.alt,
         hasAltText: info.alt.trim().length > 0,
         isGoogleDriveHosted: true,
@@ -372,7 +392,7 @@ export class ParserService {
   ): ILink[] {
     const imageLinkUrls = new Set<string>();
     for (const info of imageLinks.values()) {
-      imageLinkUrls.add(info.src);
+      imageLinkUrls.add(info.originalUrl);
     }
 
     const links: ILink[] = [];
@@ -426,6 +446,21 @@ export class ParserService {
     return (
       lower.includes(ParserPattern.GOOGLE_DRIVE_DOMAIN) &&
       lower.includes(ParserPattern.GOOGLE_DRIVE_FILE_PATH)
+    );
+  }
+
+  private extractDriveFileId(url: string): string | null {
+    for (const regex of DRIVE_FILE_ID_REGEXES) {
+      const match = url.match(regex);
+      if (match?.[1]) return match[1];
+    }
+    return null;
+  }
+
+  private toDriveThumbnailUrl(fileId: string): string {
+    return ParserPattern.DRIVE_THUMBNAIL_URL_TEMPLATE.replace(
+      ParserPattern.DRIVE_THUMBNAIL_PLACEHOLDER,
+      fileId,
     );
   }
 
