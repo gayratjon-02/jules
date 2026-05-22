@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArticlePreview } from "@/lib/components/ArticlePreview";
 import { DocUrlInput } from "@/lib/components/DocUrlInput";
 import { EmptyState } from "@/lib/components/EmptyState";
@@ -19,7 +19,17 @@ import type {
 export function ArticleCheckerScreen() {
   const [customDocId, setCustomDocId] = useState<string | null>(null);
   const { data, isLoading, error, refetch } = useDocument(customDocId);
-  const { upload, isUploading, uploadError, uploadResult } = useUpload();
+  const {
+    upload,
+    reset: resetUpload,
+    isUploading,
+    uploadError,
+    uploadResult,
+  } = useUpload();
+
+  useEffect(() => {
+    resetUpload();
+  }, [customDocId, resetUpload]);
 
   function handleAnalyze(docId: string): void {
     setCustomDocId(docId);

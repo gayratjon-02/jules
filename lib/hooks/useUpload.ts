@@ -18,6 +18,7 @@ import type {
 
 interface UseUploadResult {
   upload: (article: IArticle) => Promise<void>;
+  reset: () => void;
   isUploading: boolean;
   uploadError: ApiError | null;
   uploadResult: UploadRouteData | null;
@@ -27,6 +28,12 @@ export function useUpload(): UseUploadResult {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<ApiError | null>(null);
   const [uploadResult, setUploadResult] = useState<UploadRouteData | null>(null);
+
+  const reset = useCallback((): void => {
+    setIsUploading(false);
+    setUploadError(null);
+    setUploadResult(null);
+  }, []);
 
   const upload = useCallback(async (article: IArticle): Promise<void> => {
     setIsUploading(true);
@@ -56,5 +63,5 @@ export function useUpload(): UseUploadResult {
     }
   }, []);
 
-  return { upload, isUploading, uploadError, uploadResult };
+  return { upload, reset, isUploading, uploadError, uploadResult };
 }

@@ -6,13 +6,10 @@ import {
   HttpStatus,
   ParserPattern,
 } from "@/lib/enums";
-import { GoogleDocsService } from "@/lib/googleDocs";
+import { GoogleDocsService } from "@/lib/enums/googleDocs";
 import { ParserService } from "@/lib/parser";
 import { QualityCheckerService } from "@/lib/qualityChecker";
-import type {
-  ApiResponse,
-  DocumentRouteData,
-} from "@/lib/types";
+import type { ApiResponse, DocumentRouteData } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -73,7 +70,10 @@ function resolveError(error: unknown): ResolvedError {
       return { mapping, message: candidate };
     }
   }
-  return { mapping: DEFAULT_ERROR_MAPPING, message: ErrorMessage.UNKNOWN_ERROR };
+  return {
+    mapping: DEFAULT_ERROR_MAPPING,
+    message: ErrorMessage.UNKNOWN_ERROR,
+  };
 }
 
 function resolveDocId(request: Request): string {
