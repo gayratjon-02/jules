@@ -14,8 +14,17 @@ import type { RawDocumentContent } from "@/lib/types";
 
 const EMPTY = "";
 const NEWLINE = "\n";
+const REGEX_CASE_INSENSITIVE_FLAG = "i";
 const TRAILING_NEWLINE_REGEX = /\n$/;
 const HTTP_PROTOCOL_REGEX = /^https?:\/\//i;
+const IMAGE_ANCHOR_REGEX = new RegExp(
+  ParserPattern.IMAGE_ANCHOR_PATTERN,
+  REGEX_CASE_INSENSITIVE_FLAG,
+);
+const ALT_TAG_REGEX = new RegExp(
+  ParserPattern.ALT_TAG_PATTERN,
+  REGEX_CASE_INSENSITIVE_FLAG,
+);
 
 const HTML_ESCAPE_RULES: ReadonlyArray<readonly [RegExp, string]> = [
   [/&/g, "&amp;"],
@@ -61,7 +70,19 @@ interface MetaExtraction {
   metaParagraphIndices: ReadonlySet<number>;
 }
 
+interface ImageLinkInfo {
+  src: string;
+  alt: string;
+  altParagraphIndex: number | null;
+}
+
+interface SoleLinkInfo {
+  url: string;
+  anchorText: string;
+}
+
 type InlineObjectMap = Record<string, docs_v1.Schema$InlineObject>;
+type ImageLinkMap = ReadonlyMap<number, ImageLinkInfo>;
 
 export class ParserService {
   parse(raw: RawDocumentContent): IParsedDocument {
@@ -70,10 +91,16 @@ export class ParserService {
       const inlineObjects: InlineObjectMap = raw.inlineObjects ?? {};
 
       const meta = this.extractMeta(content);
-      const title = this.extractTitle(content, meta.metaParagraphIndices);
-      const html = this.buildHtml(content, inlineObjects, meta.metaParagraphIndices);
-      const images = this.extractImages(inlineObjects);
-      const links = this.extractLinks(content);
+      const imageLinks = this.detectImageLinks(content, meta.metaParagraphIndices);
+      const altTagIndices = this.collectAltTagIndices(imageLinks);
+
+      const htmlSkip = this.union(meta.metaParagraphIndices, altTagIndices);
+      const titleSkip = this.union(htmlSkip, new Set(imageLinks.keys()));
+
+      const title = this.extractTitle(content, titleSkip);
+      const html = this.buildHtml(content, inlineObjects, htmlSkip, imageLinks);
+      const images = this.extractImages(inlineObjects, imageLinks);
+      const links = this.extractLinks(content, imageLinks);
 
       return {
         article: {
@@ -118,12 +145,94 @@ export class ParserService {
     return { metaTitle, metaDescription, metaParagraphIndices };
   }
 
+  private detectImageLinks(
+    content: docs_v1.Schema$StructuralElement[],
+    metaIndices: ReadonlySet<number>,
+  ): ImageLinkMap {
+    const result = new Map<number, ImageLinkInfo>();
+
+    content.forEach((element, index) => {
+      if (metaIndices.has(index)) return;
+
+      const paragraph = element.paragraph;
+      if (!paragraph) return;
+
+      const imageLink = this.findImageLinkInParagraph(paragraph);
+      if (!imageLink) return;
+
+      const { alt, altParagraphIndex } = this.findAltTag(content, index);
+
+      result.set(index, {
+        src: imageLink.url,
+        alt,
+        altParagraphIndex,
+      });
+    });
+
+    return result;
+  }
+
+  private findImageLinkInParagraph(
+    paragraph: docs_v1.Schema$Paragraph,
+  ): SoleLinkInfo | null {
+    for (const element of paragraph.elements ?? []) {
+      const textRun = element.textRun;
+      if (!textRun) continue;
+
+      const url = textRun.textStyle?.link?.url;
+      if (!url) continue;
+
+      const anchorText = (textRun.content ?? EMPTY)
+        .replace(TRAILING_NEWLINE_REGEX, EMPTY)
+        .trim();
+
+      if (IMAGE_ANCHOR_REGEX.test(anchorText) || this.isGoogleDriveFileUrl(url)) {
+        return { url, anchorText };
+      }
+    }
+    return null;
+  }
+
+  private findAltTag(
+    content: docs_v1.Schema$StructuralElement[],
+    paragraphIndex: number,
+  ): { alt: string; altParagraphIndex: number | null } {
+    const currentText = this.getParagraphText(content[paragraphIndex]?.paragraph);
+    const currentMatch = currentText.match(ALT_TAG_REGEX);
+    if (currentMatch?.[1]) {
+      return { alt: currentMatch[1].trim(), altParagraphIndex: null };
+    }
+
+    const nextIndex = paragraphIndex + 1;
+    if (nextIndex >= content.length) {
+      return { alt: EMPTY, altParagraphIndex: null };
+    }
+
+    const nextText = this.getParagraphText(content[nextIndex]?.paragraph);
+    const nextMatch = nextText.match(ALT_TAG_REGEX);
+    if (nextMatch?.[1]) {
+      return { alt: nextMatch[1].trim(), altParagraphIndex: nextIndex };
+    }
+
+    return { alt: EMPTY, altParagraphIndex: null };
+  }
+
+  private collectAltTagIndices(imageLinks: ImageLinkMap): ReadonlySet<number> {
+    const indices = new Set<number>();
+    for (const info of imageLinks.values()) {
+      if (info.altParagraphIndex !== null) {
+        indices.add(info.altParagraphIndex);
+      }
+    }
+    return indices;
+  }
+
   private extractTitle(
     content: docs_v1.Schema$StructuralElement[],
-    metaParagraphIndices: ReadonlySet<number>,
+    skipIndices: ReadonlySet<number>,
   ): string {
     for (let i = 0; i < content.length; i++) {
-      if (metaParagraphIndices.has(i)) continue;
+      if (skipIndices.has(i)) continue;
       const paragraph = content[i].paragraph;
       if (!paragraph) continue;
 
@@ -138,21 +247,32 @@ export class ParserService {
   private buildHtml(
     content: docs_v1.Schema$StructuralElement[],
     inlineObjects: InlineObjectMap,
-    metaParagraphIndices: ReadonlySet<number>,
+    skipIndices: ReadonlySet<number>,
+    imageLinks: ImageLinkMap,
   ): string {
     const parts: string[] = [];
 
     content.forEach((element, index) => {
-      if (metaParagraphIndices.has(index)) return;
+      if (skipIndices.has(index)) return;
 
       const paragraph = element.paragraph;
       if (!paragraph) return;
+
+      const imageLink = imageLinks.get(index);
+      if (imageLink) {
+        parts.push(this.renderImageLink(imageLink));
+        return;
+      }
 
       const rendered = this.renderParagraph(paragraph, inlineObjects);
       if (rendered) parts.push(rendered);
     });
 
     return parts.join(NEWLINE);
+  }
+
+  private renderImageLink(info: ImageLinkInfo): string {
+    return `<${HtmlTag.IMG} src="${this.escapeHtml(info.src)}" alt="${this.escapeHtml(info.alt)}" />`;
   }
 
   private renderParagraph(
@@ -214,7 +334,10 @@ export class ParserService {
     return `<${HtmlTag.IMG} src="${this.escapeHtml(src)}" alt="${this.escapeHtml(alt)}" />`;
   }
 
-  private extractImages(inlineObjects: InlineObjectMap): IImage[] {
+  private extractImages(
+    inlineObjects: InlineObjectMap,
+    imageLinks: ImageLinkMap,
+  ): IImage[] {
     const images: IImage[] = [];
 
     for (const id of Object.keys(inlineObjects)) {
@@ -231,10 +354,27 @@ export class ParserService {
       });
     }
 
+    for (const info of imageLinks.values()) {
+      images.push({
+        src: info.src,
+        alt: info.alt,
+        hasAltText: info.alt.trim().length > 0,
+        isGoogleDriveHosted: true,
+      });
+    }
+
     return images;
   }
 
-  private extractLinks(content: docs_v1.Schema$StructuralElement[]): ILink[] {
+  private extractLinks(
+    content: docs_v1.Schema$StructuralElement[],
+    imageLinks: ImageLinkMap,
+  ): ILink[] {
+    const imageLinkUrls = new Set<string>();
+    for (const info of imageLinks.values()) {
+      imageLinkUrls.add(info.src);
+    }
+
     const links: ILink[] = [];
 
     for (const element of content) {
@@ -245,6 +385,7 @@ export class ParserService {
         const textRun = paragraphElement.textRun;
         const url = textRun?.textStyle?.link?.url;
         if (!url) continue;
+        if (imageLinkUrls.has(url)) continue;
 
         const anchorText = (textRun?.content ?? EMPTY)
           .replace(TRAILING_NEWLINE_REGEX, EMPTY)
@@ -280,6 +421,14 @@ export class ParserService {
     return GOOGLE_DRIVE_DOMAINS.some((domain) => lower.includes(domain));
   }
 
+  private isGoogleDriveFileUrl(url: string): boolean {
+    const lower = url.toLowerCase();
+    return (
+      lower.includes(ParserPattern.GOOGLE_DRIVE_DOMAIN) &&
+      lower.includes(ParserPattern.GOOGLE_DRIVE_FILE_PATH)
+    );
+  }
+
   private isProductUrl(url: string): boolean {
     const lower = url.toLowerCase();
     return PRODUCT_URL_PATTERNS.some((pattern) => lower.includes(pattern));
@@ -290,5 +439,13 @@ export class ParserService {
       (acc, [pattern, replacement]) => acc.replace(pattern, replacement),
       input,
     );
+  }
+
+  private union(a: ReadonlySet<number>, b: ReadonlySet<number>): ReadonlySet<number> {
+    const merged = new Set<number>(a);
+    for (const value of b) {
+      merged.add(value);
+    }
+    return merged;
   }
 }

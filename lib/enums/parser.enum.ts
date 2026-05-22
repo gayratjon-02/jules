@@ -8,6 +8,9 @@ export enum ParserPattern {
   SHOP_URL_SEGMENT = "/shop/",
   P_URL_SEGMENT = "/p/",
   ITEM_URL_SEGMENT = "/item/",
+  GOOGLE_DRIVE_FILE_PATH = "/file/",
+  IMAGE_ANCHOR_PATTERN = "^IMAGE\\s*\\d+$",
+  ALT_TAG_PATTERN = "Alt\\s*tag:\\s*[\"\\u201C\\u201D](.+?)[\"\\u201C\\u201D]",
 }
 
 export enum HtmlTag {
