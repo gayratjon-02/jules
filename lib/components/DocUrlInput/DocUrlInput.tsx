@@ -32,9 +32,15 @@ export function DocUrlInput({
     onSubmit(docId);
   }
 
-  function handleClear(): void {
+  function handleClearInput(): void {
     setValue("");
     setError(null);
+  }
+
+  function handleResetAll(): void {
+    setValue("");
+    setError(null);
+    onReset();
   }
 
   return (
@@ -55,9 +61,9 @@ export function DocUrlInput({
         {value ? (
           <button
             type="button"
-            onClick={handleClear}
+            onClick={handleClearInput}
             disabled={isLoading}
-            aria-label="Clear"
+            aria-label={UiLabel.CLEAR}
             className="flex h-7 w-7 flex-none items-center justify-center rounded-md text-slate-400 transition hover:bg-slate-100 hover:text-slate-600 disabled:cursor-not-allowed"
           >
             <XIcon className="h-3.5 w-3.5" />
@@ -80,11 +86,11 @@ export function DocUrlInput({
       {currentDocId ? (
         <button
           type="button"
-          onClick={onReset}
+          onClick={handleResetAll}
           disabled={isLoading}
           className="mt-2 text-xs font-medium text-slate-500 transition hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {UiLabel.RESET_TO_DEFAULT}
+          {UiLabel.CLEAR}
         </button>
       ) : null}
     </div>

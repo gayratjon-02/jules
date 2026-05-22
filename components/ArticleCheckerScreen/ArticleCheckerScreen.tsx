@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ArticlePreview } from "@/lib/components/ArticlePreview";
 import { DocUrlInput } from "@/lib/components/DocUrlInput";
+import { EmptyState } from "@/lib/components/EmptyState";
 import { AlertIcon, RefreshIcon } from "@/lib/components/icons";
 import { MetaPanel } from "@/lib/components/MetaPanel";
 import { QualityPanel } from "@/lib/components/QualityPanel";
@@ -15,13 +16,9 @@ import type {
   UploadRouteData,
 } from "@/lib/types";
 
-const DOC_ID_TRUNCATE_LENGTH = 12;
-
 export function ArticleCheckerScreen() {
   const [customDocId, setCustomDocId] = useState<string | null>(null);
-  const { data, isLoading, error, refetch } = useDocument(
-    customDocId ?? undefined,
-  );
+  const { data, isLoading, error, refetch } = useDocument(customDocId);
   const { upload, isUploading, uploadError, uploadResult } = useUpload();
 
   function handleAnalyze(docId: string): void {
@@ -40,7 +37,7 @@ export function ArticleCheckerScreen() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
-      <Header isLoading={isLoading} onRefresh={refetch} />
+      <Header isLoading={isLoading} onRefresh={refetch} canRefresh={data !== null} />
 
       <main className="mx-auto max-w-7xl px-6 py-8 pb-32 lg:px-8">
         <DocUrlInput
@@ -50,19 +47,9 @@ export function ArticleCheckerScreen() {
           currentDocId={customDocId}
         />
 
-        {customDocId ? (
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
-            <span>
-              {UiLabel.ANALYZING_CUSTOM_DOC}:{" "}
-              <span className="font-mono">
-                {customDocId.slice(0, DOC_ID_TRUNCATE_LENGTH)}…
-              </span>
-            </span>
-          </div>
-        ) : null}
-
-        {isLoading ? (
+        {customDocId === null ? (
+          <EmptyState />
+        ) : isLoading ? (
           <SkeletonGrid />
         ) : error ? (
           <ErrorCard error={error} onRetry={refetch} />
@@ -71,13 +58,14 @@ export function ArticleCheckerScreen() {
         ) : null}
       </main>
 
-      <Footer
-        data={data}
-        isUploading={isUploading}
-        uploadError={uploadError}
-        uploadResult={uploadResult}
-        onUpload={handleUpload}
-      />
+      {data ? (
+        <Footer
+          isUploading={isUploading}
+          uploadError={uploadError}
+          uploadResult={uploadResult}
+          onUpload={handleUpload}
+        />
+      ) : null}
     </div>
   );
 }
@@ -85,9 +73,10 @@ export function ArticleCheckerScreen() {
 interface HeaderProps {
   isLoading: boolean;
   onRefresh: () => void;
+  canRefresh: boolean;
 }
 
-function Header({ isLoading, onRefresh }: HeaderProps) {
+function Header({ isLoading, onRefresh, canRefresh }: HeaderProps) {
   return (
     <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
@@ -97,15 +86,17 @@ function Header({ isLoading, onRefresh }: HeaderProps) {
           </h1>
           <p className="text-xs text-slate-500">{UiLabel.APP_TAGLINE}</p>
         </div>
-        <button
-          type="button"
-          onClick={onRefresh}
-          disabled={isLoading}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <RefreshIcon className={isLoading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
-          <span>{UiLabel.REFRESH}</span>
-        </button>
+        {canRefresh ? (
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={isLoading}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <RefreshIcon className={isLoading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+            <span>{UiLabel.REFRESH}</span>
+          </button>
+        ) : null}
       </div>
     </header>
   );
@@ -193,7 +184,6 @@ function ErrorCard({ error, onRetry }: ErrorCardProps) {
 }
 
 interface FooterProps {
-  data: DocumentRouteData | null;
   isUploading: boolean;
   uploadError: ApiError | null;
   uploadResult: UploadRouteData | null;
@@ -201,7 +191,6 @@ interface FooterProps {
 }
 
 function Footer({
-  data,
   isUploading,
   uploadError,
   uploadResult,
@@ -216,7 +205,7 @@ function Footer({
           isUploading={isUploading}
           isSuccess={uploadResult !== null}
           isError={uploadError !== null}
-          disabled={data === null}
+          disabled={false}
         />
       </div>
     </footer>

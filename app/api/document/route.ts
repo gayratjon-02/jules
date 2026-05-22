@@ -3,7 +3,6 @@ import {
   ApiErrorCode,
   ApiQueryParam,
   ErrorMessage,
-  GoogleEnvVar,
   HttpStatus,
   ParserPattern,
 } from "@/lib/enums";
@@ -79,20 +78,17 @@ function resolveError(error: unknown): ResolvedError {
 
 function resolveDocId(request: Request): string {
   const { searchParams } = new URL(request.url);
-  const queryDocId = searchParams.get(ApiQueryParam.DOC_ID);
+  const docId = searchParams.get(ApiQueryParam.DOC_ID);
 
-  if (queryDocId !== null) {
-    if (!DOC_ID_REGEX.test(queryDocId)) {
-      throw new Error(ErrorMessage.DOC_ID_INVALID_FORMAT);
-    }
-    return queryDocId;
-  }
-
-  const envDocId = process.env[GoogleEnvVar.DOC_ID];
-  if (!envDocId) {
+  if (docId === null || docId.length === 0) {
     throw new Error(ErrorMessage.DOC_ID_REQUIRED);
   }
-  return envDocId;
+
+  if (!DOC_ID_REGEX.test(docId)) {
+    throw new Error(ErrorMessage.DOC_ID_INVALID_FORMAT);
+  }
+
+  return docId;
 }
 
 export async function GET(

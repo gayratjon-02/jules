@@ -54,7 +54,7 @@ export enum UiLabel {
   DOC_URL_PLACEHOLDER = "Paste Google Doc URL or ID",
   ANALYZE_BUTTON = "Analyze",
   INVALID_URL_ERROR = "Please enter a valid Google Doc URL or ID",
-  RESET_TO_DEFAULT = "← Reset to default document",
-  ANALYZING_CUSTOM_DOC = "Analyzing custom document",
-  DEFAULT_DOC_LABEL = "Default sample document",
+  CLEAR = "Clear",
+  EMPTY_STATE_TITLE = "No document loaded",
+  EMPTY_STATE_DESCRIPTION = "Paste a Google Doc URL above to analyze its quality.",
 }

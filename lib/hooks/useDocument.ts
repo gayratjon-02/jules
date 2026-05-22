@@ -21,18 +21,26 @@ interface UseDocumentResult {
   refetch: () => void;
 }
 
-function buildUrl(docId: string | undefined): string {
-  if (!docId) return ApiRoute.DOCUMENT;
+function buildUrl(docId: string): string {
   return `${ApiRoute.DOCUMENT}?${ApiQueryParam.DOC_ID}=${encodeURIComponent(docId)}`;
 }
 
-export function useDocument(docId?: string): UseDocumentResult {
+export function useDocument(docId?: string | null): UseDocumentResult {
   const [data, setData] = useState<DocumentRouteData | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<ApiError | null>(null);
   const [refreshIndex, setRefreshIndex] = useState<number>(0);
 
   useEffect(() => {
+    const trimmed = docId?.trim();
+
+    if (!trimmed) {
+      setData(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     const controller = new AbortController();
 
     async function load(): Promise<void> {
@@ -40,7 +48,7 @@ export function useDocument(docId?: string): UseDocumentResult {
       setError(null);
 
       try {
-        const response = await fetch(buildUrl(docId), {
+        const response = await fetch(buildUrl(trimmed as string), {
           signal: controller.signal,
         });
         const body = (await response.json()) as ApiResponse<DocumentRouteData>;
