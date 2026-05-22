@@ -172,7 +172,7 @@ export class ParserService {
 
       const driveFileId = this.extractDriveFileId(imageLink.url);
       const src = driveFileId
-        ? this.toDriveThumbnailUrl(driveFileId)
+        ? this.toImageProxyUrl(driveFileId)
         : imageLink.url;
 
       result.set(index, {
@@ -457,9 +457,9 @@ export class ParserService {
     return null;
   }
 
-  private toDriveThumbnailUrl(fileId: string): string {
-    return ParserPattern.DRIVE_THUMBNAIL_URL_TEMPLATE.replace(
-      ParserPattern.DRIVE_THUMBNAIL_PLACEHOLDER,
+  private toImageProxyUrl(fileId: string): string {
+    return ParserPattern.IMAGE_PROXY_URL_TEMPLATE.replace(
+      ParserPattern.IMAGE_PROXY_PLACEHOLDER,
       fileId,
     );
   }

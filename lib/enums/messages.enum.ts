@@ -49,4 +49,6 @@ export enum UiLabel {
   UPLOAD_FAILED_LABEL = "Upload failed",
   UPLOADED_AT = "Uploaded at",
   UPLOAD_ID = "ID",
+  IMAGE_FALLBACK_PREFIX = "Image",
+  IMAGE_FALLBACK_VIEW = "View on Drive",
 }

@@ -14,8 +14,8 @@ export enum ParserPattern {
   DRIVE_FILE_ID_FILE_PATH_PATTERN = "/file/d/([a-zA-Z0-9_-]+)",
   DRIVE_FILE_ID_QUERY_PATTERN = "[?&]id=([a-zA-Z0-9_-]+)",
   DRIVE_FILE_ID_D_PATH_PATTERN = "/d/([a-zA-Z0-9_-]+)",
-  DRIVE_THUMBNAIL_URL_TEMPLATE = "https://drive.google.com/thumbnail?id={id}&sz=w1200",
-  DRIVE_THUMBNAIL_PLACEHOLDER = "{id}",
+  IMAGE_PROXY_URL_TEMPLATE = "/api/image-proxy?fileId={id}",
+  IMAGE_PROXY_PLACEHOLDER = "{id}",
 }
 
 export enum HtmlTag {
