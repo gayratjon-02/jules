@@ -1,17 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { UiLabel } from "@/lib/enums";
+import type { DocumentId } from "@/lib/types";
 
 interface UploadButtonProps {
-  onUploaded?: (documentId: string) => void;
+  onUploaded?: (documentId: DocumentId) => void;
 }
 
-export default function UploadButton({ onUploaded }: UploadButtonProps) {
+export function UploadButton({ onUploaded }: UploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
 
   async function handleFile(file: File) {
-    // TODO: POST to /api/upload, surface progress, then call onUploaded.
     setBusy(true);
     try {
       void file;
@@ -39,7 +40,7 @@ export default function UploadButton({ onUploaded }: UploadButtonProps) {
         onClick={() => inputRef.current?.click()}
         className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
       >
-        {busy ? "Uploading…" : "Upload document"}
+        {busy ? UiLabel.UPLOAD_BUTTON_BUSY : UiLabel.UPLOAD_BUTTON_IDLE}
       </button>
     </div>
   );

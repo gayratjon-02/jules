@@ -1,18 +1,23 @@
 import { NextResponse } from "next/server";
-import type { UploadResponse } from "@/types";
+import { ApiErrorCode, ErrorMessage } from "@/lib/enums";
+import type { ApiResponse, DocumentId } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request): Promise<NextResponse<UploadResponse>> {
-  // TODO: accept multipart/form-data, push the file to Drive (or local
-  // storage), and return the resulting document id.
-  void request;
+export interface UploadRouteData {
+  documentId: DocumentId;
+}
 
-  return NextResponse.json(
-    {
-      ok: false,
-      error: "upload route not implemented",
+export async function POST(
+  _request: Request,
+): Promise<NextResponse<ApiResponse<UploadRouteData>>> {
+  const response: ApiResponse<UploadRouteData> = {
+    ok: false,
+    error: {
+      code: ApiErrorCode.NOT_IMPLEMENTED,
+      message: ErrorMessage.NOT_IMPLEMENTED,
     },
-    { status: 501 },
-  );
+  };
+
+  return NextResponse.json(response, { status: 501 });
 }

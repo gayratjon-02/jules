@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
-import { fetchDocumentAsHtml } from "@/lib/googleDocs";
-import { parseArticle } from "@/lib/parser";
-import { checkArticle } from "@/lib/qualityChecker";
-import type { DocumentResponse } from "@/types";
+import { ApiErrorCode, ErrorMessage } from "@/lib/enums";
+import type { IParsedDocument, IQualityReport } from "@/lib/interfaces";
+import type { ApiResponse } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request): Promise<NextResponse> {
-  // TODO: read `id` from the query string, fall back to GOOGLE_DOC_ID,
-  // pipe through fetch → parse → quality check and return DocumentResponse.
-  const { searchParams } = new URL(request.url);
-  const documentId = searchParams.get("id") ?? process.env.GOOGLE_DOC_ID ?? "";
+export interface DocumentRouteData {
+  document: IParsedDocument;
+  quality: IQualityReport;
+}
 
-  void fetchDocumentAsHtml;
-  void parseArticle;
-  void checkArticle;
-
-  const payload: DocumentResponse | { error: string } = {
-    error: `document route not implemented (requested id: ${documentId || "none"})`,
+export async function GET(
+  _request: Request,
+): Promise<NextResponse<ApiResponse<DocumentRouteData>>> {
+  const response: ApiResponse<DocumentRouteData> = {
+    ok: false,
+    error: {
+      code: ApiErrorCode.NOT_IMPLEMENTED,
+      message: ErrorMessage.NOT_IMPLEMENTED,
+    },
   };
 
-  return NextResponse.json(payload, { status: 501 });
+  return NextResponse.json(response, { status: 501 });
 }
