@@ -1,12 +1,17 @@
-import type { Severity } from "@/lib/enums";
+import type { QualityCheckId, Severity } from "@/lib/enums";
 
 export interface IQualityCheck {
+  id: QualityCheckId;
+  label: string;
   passed: boolean;
-  message: string;
   severity: Severity;
+  message: string;
 }
 
 export interface IQualityReport {
-  score: number;
   checks: IQualityCheck[];
+  totalPassed: number;
+  totalFailed: number;
+  totalWarnings: number;
+  overallPassed: boolean;
 }

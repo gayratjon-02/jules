@@ -14,13 +14,17 @@ export function QualityPanel({ report }: QualityPanelProps) {
           {UiLabel.QUALITY_PANEL_TITLE}
         </h2>
         {report ? (
-          <span className="text-sm font-semibold">{report.score}/100</span>
+          <span className="text-xs text-foreground/70">
+            {report.totalPassed} {UiLabel.QUALITY_SUMMARY_PASSED} ·{" "}
+            {report.totalWarnings} {UiLabel.QUALITY_SUMMARY_WARNINGS} ·{" "}
+            {report.totalFailed} {UiLabel.QUALITY_SUMMARY_FAILED}
+          </span>
         ) : null}
       </header>
       {report && report.checks.length > 0 ? (
-        <ul className="space-y-2">
-          {report.checks.map((check, index) => (
-            <QualityCheckItem key={index} check={check} />
+        <ul className="space-y-3">
+          {report.checks.map((check) => (
+            <QualityCheckItem key={check.id} check={check} />
           ))}
         </ul>
       ) : (
