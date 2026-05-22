@@ -7,3 +7,4 @@ export * from "./parser.enum";
 export * from "./qualityCheck.enum";
 export * from "./httpStatus.enum";
 export * from "./apiRoute.enum";
+export * from "./timing.enum";

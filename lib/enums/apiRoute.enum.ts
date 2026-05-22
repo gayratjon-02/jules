@@ -8,10 +8,14 @@ export enum HttpMethod {
   POST = "POST",
 }
 
-export enum FetchErrorName {
-  ABORT = "AbortError",
+export enum HttpHeader {
+  CONTENT_TYPE = "Content-Type",
 }
 
-export enum UploadField {
-  FILE = "file",
+export enum MimeType {
+  JSON = "application/json",
+}
+
+export enum FetchErrorName {
+  ABORT = "AbortError",
 }

@@ -6,11 +6,21 @@ import { QualityPanel } from "@/lib/components/QualityPanel";
 import { UploadButton } from "@/lib/components/UploadButton";
 import { UiLabel } from "@/lib/enums";
 import { useDocument, useUpload } from "@/lib/hooks";
-import type { ApiError } from "@/lib/types";
+import type {
+  ApiError,
+  DocumentRouteData,
+  UploadRouteData,
+} from "@/lib/types";
 
 export function ArticleCheckerScreen() {
   const { data, isLoading, error, refetch } = useDocument();
-  const { upload, isUploading, uploadError, uploadSuccess } = useUpload();
+  const { upload, isUploading, uploadError, uploadResult } = useUpload();
+
+  function handleUpload(): void {
+    if (data) {
+      void upload(data.parsed.article);
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900">
@@ -39,28 +49,40 @@ export function ArticleCheckerScreen() {
         ) : error ? (
           <ErrorView error={error} onRetry={refetch} />
         ) : data ? (
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <ArticlePreview article={data.parsed.article} />
-            </div>
-            <div className="space-y-6">
-              <QualityPanel report={data.report} />
-              <MetaPanel article={data.parsed.article} />
-            </div>
-          </div>
+          <ContentGrid data={data} />
         ) : null}
       </main>
 
       <footer className="fixed inset-x-0 bottom-0 border-t border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-end px-6 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+          <UploadFeedback uploadResult={uploadResult} uploadError={uploadError} />
           <UploadButton
-            onUpload={upload}
+            onClick={handleUpload}
             isUploading={isUploading}
-            uploadError={uploadError}
-            uploadSuccess={uploadSuccess}
+            isSuccess={uploadResult !== null}
+            isError={uploadError !== null}
+            disabled={data === null}
           />
         </div>
       </footer>
+    </div>
+  );
+}
+
+interface ContentGridProps {
+  data: DocumentRouteData;
+}
+
+function ContentGrid({ data }: ContentGridProps) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <ArticlePreview article={data.parsed.article} />
+      </div>
+      <div className="space-y-6">
+        <QualityPanel report={data.report} />
+        <MetaPanel article={data.parsed.article} />
+      </div>
     </div>
   );
 }
@@ -96,4 +118,38 @@ function ErrorView({ error, onRetry }: ErrorViewProps) {
       </button>
     </div>
   );
+}
+
+interface UploadFeedbackProps {
+  uploadResult: UploadRouteData | null;
+  uploadError: ApiError | null;
+}
+
+function UploadFeedback({ uploadResult, uploadError }: UploadFeedbackProps) {
+  if (uploadResult) {
+    return (
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
+        <span className="font-medium text-emerald-700">
+          {uploadResult.destination}
+        </span>
+        <span>
+          {UiLabel.UPLOADED_AT} {formatTime(uploadResult.uploadedAt)}
+        </span>
+        <span className="font-mono text-gray-500">
+          {UiLabel.UPLOAD_ID} {uploadResult.uploadId}
+        </span>
+      </div>
+    );
+  }
+
+  if (uploadError) {
+    return <p className="text-xs text-red-600">{uploadError.message}</p>;
+  }
+
+  return <div />;
+}
+
+function formatTime(iso: string): string {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? iso : date.toLocaleTimeString();
 }

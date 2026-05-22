@@ -5,9 +5,11 @@ import {
   ApiErrorCode,
   ApiRoute,
   ErrorMessage,
+  HttpHeader,
   HttpMethod,
-  UploadField,
+  MimeType,
 } from "@/lib/enums";
+import type { IArticle } from "@/lib/interfaces";
 import type {
   ApiError,
   ApiResponse,
@@ -15,34 +17,32 @@ import type {
 } from "@/lib/types";
 
 interface UseUploadResult {
-  upload: (file: File) => Promise<void>;
+  upload: (article: IArticle) => Promise<void>;
   isUploading: boolean;
   uploadError: ApiError | null;
-  uploadSuccess: boolean;
+  uploadResult: UploadRouteData | null;
 }
 
 export function useUpload(): UseUploadResult {
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [uploadError, setUploadError] = useState<ApiError | null>(null);
-  const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
+  const [uploadResult, setUploadResult] = useState<UploadRouteData | null>(null);
 
-  const upload = useCallback(async (file: File): Promise<void> => {
+  const upload = useCallback(async (article: IArticle): Promise<void> => {
     setIsUploading(true);
     setUploadError(null);
-    setUploadSuccess(false);
+    setUploadResult(null);
 
     try {
-      const formData = new FormData();
-      formData.append(UploadField.FILE, file);
-
       const response = await fetch(ApiRoute.UPLOAD, {
         method: HttpMethod.POST,
-        body: formData,
+        headers: { [HttpHeader.CONTENT_TYPE]: MimeType.JSON },
+        body: JSON.stringify({ article }),
       });
       const body = (await response.json()) as ApiResponse<UploadRouteData>;
 
       if (body.success) {
-        setUploadSuccess(true);
+        setUploadResult(body.data);
       } else {
         setUploadError(body.error);
       }
@@ -56,5 +56,5 @@ export function useUpload(): UseUploadResult {
     }
   }, []);
 
-  return { upload, isUploading, uploadError, uploadSuccess };
+  return { upload, isUploading, uploadError, uploadResult };
 }
