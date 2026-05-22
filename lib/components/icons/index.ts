@@ -7,3 +7,4 @@ export * from "./AlertIcon";
 export * from "./UploadCloudIcon";
 export * from "./ImageIcon";
 export * from "./LinkIcon";
+export * from "./DownloadIcon";

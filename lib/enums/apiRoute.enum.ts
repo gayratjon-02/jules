@@ -17,6 +17,7 @@ export enum HttpHeader {
 export enum MimeType {
   JSON = "application/json",
   OCTET_STREAM = "application/octet-stream",
+  HTML = "text/html",
 }
 
 export enum ApiQueryParam {

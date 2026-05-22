@@ -9,3 +9,5 @@ export * from "./httpStatus.enum";
 export * from "./apiRoute.enum";
 export * from "./timing.enum";
 export * from "./cache.enum";
+export * from "./file.enum";
+export * from "./htmlTemplate.enum";
