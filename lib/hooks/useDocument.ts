@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ApiErrorCode,
+  ApiQueryParam,
   ApiRoute,
   ErrorMessage,
   FetchErrorName,
@@ -20,7 +21,12 @@ interface UseDocumentResult {
   refetch: () => void;
 }
 
-export function useDocument(): UseDocumentResult {
+function buildUrl(docId: string | undefined): string {
+  if (!docId) return ApiRoute.DOCUMENT;
+  return `${ApiRoute.DOCUMENT}?${ApiQueryParam.DOC_ID}=${encodeURIComponent(docId)}`;
+}
+
+export function useDocument(docId?: string): UseDocumentResult {
   const [data, setData] = useState<DocumentRouteData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<ApiError | null>(null);
@@ -34,7 +40,7 @@ export function useDocument(): UseDocumentResult {
       setError(null);
 
       try {
-        const response = await fetch(ApiRoute.DOCUMENT, {
+        const response = await fetch(buildUrl(docId), {
           signal: controller.signal,
         });
         const body = (await response.json()) as ApiResponse<DocumentRouteData>;
@@ -67,7 +73,7 @@ export function useDocument(): UseDocumentResult {
     return () => {
       controller.abort();
     };
-  }, [refreshIndex]);
+  }, [refreshIndex, docId]);
 
   const refetch = useCallback(() => {
     setRefreshIndex((index) => index + 1);

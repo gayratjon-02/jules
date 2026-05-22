@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { ArticlePreview } from "@/lib/components/ArticlePreview";
+import { DocUrlInput } from "@/lib/components/DocUrlInput";
 import { AlertIcon, RefreshIcon } from "@/lib/components/icons";
 import { MetaPanel } from "@/lib/components/MetaPanel";
 import { QualityPanel } from "@/lib/components/QualityPanel";
@@ -13,9 +15,22 @@ import type {
   UploadRouteData,
 } from "@/lib/types";
 
+const DOC_ID_TRUNCATE_LENGTH = 12;
+
 export function ArticleCheckerScreen() {
-  const { data, isLoading, error, refetch } = useDocument();
+  const [customDocId, setCustomDocId] = useState<string | null>(null);
+  const { data, isLoading, error, refetch } = useDocument(
+    customDocId ?? undefined,
+  );
   const { upload, isUploading, uploadError, uploadResult } = useUpload();
+
+  function handleAnalyze(docId: string): void {
+    setCustomDocId(docId);
+  }
+
+  function handleReset(): void {
+    setCustomDocId(null);
+  }
 
   function handleUpload(): void {
     if (data) {
@@ -28,6 +43,25 @@ export function ArticleCheckerScreen() {
       <Header isLoading={isLoading} onRefresh={refetch} />
 
       <main className="mx-auto max-w-7xl px-6 py-8 pb-32 lg:px-8">
+        <DocUrlInput
+          onSubmit={handleAnalyze}
+          onReset={handleReset}
+          isLoading={isLoading}
+          currentDocId={customDocId}
+        />
+
+        {customDocId ? (
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+            <span>
+              {UiLabel.ANALYZING_CUSTOM_DOC}:{" "}
+              <span className="font-mono">
+                {customDocId.slice(0, DOC_ID_TRUNCATE_LENGTH)}…
+              </span>
+            </span>
+          </div>
+        ) : null}
+
         {isLoading ? (
           <SkeletonGrid />
         ) : error ? (

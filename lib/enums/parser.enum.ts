@@ -16,6 +16,8 @@ export enum ParserPattern {
   DRIVE_FILE_ID_D_PATH_PATTERN = "/d/([a-zA-Z0-9_-]+)",
   IMAGE_PROXY_URL_TEMPLATE = "/api/image-proxy?fileId={id}",
   IMAGE_PROXY_PLACEHOLDER = "{id}",
+  DOC_URL_FULL_PATTERN = "/document/d/([a-zA-Z0-9_-]+)",
+  DOC_URL_RAW_ID_PATTERN = "^([a-zA-Z0-9_-]+)$",
 }
 
 export enum HtmlTag {

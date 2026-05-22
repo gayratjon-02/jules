@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 import {
   ApiErrorCode,
+  ApiQueryParam,
   ErrorMessage,
   GoogleEnvVar,
   HttpStatus,
+  ParserPattern,
 } from "@/lib/enums";
 import { GoogleDocsService } from "@/lib/googleDocs";
 import { ParserService } from "@/lib/parser";
@@ -15,6 +17,8 @@ import type {
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
+
+const DOC_ID_REGEX = new RegExp(ParserPattern.DOC_URL_RAW_ID_PATTERN);
 
 interface ErrorMapping {
   code: ApiErrorCode;
@@ -33,6 +37,10 @@ const ERROR_MAPPINGS: Readonly<Partial<Record<ErrorMessage, ErrorMapping>>> = {
   },
   [ErrorMessage.DOC_ID_REQUIRED]: {
     code: ApiErrorCode.DOC_ID_REQUIRED,
+    status: HttpStatus.BAD_REQUEST,
+  },
+  [ErrorMessage.DOC_ID_INVALID_FORMAT]: {
+    code: ApiErrorCode.DOC_ID_INVALID_FORMAT,
     status: HttpStatus.BAD_REQUEST,
   },
   [ErrorMessage.DOC_FETCH_FAILED]: {
@@ -69,12 +77,29 @@ function resolveError(error: unknown): ResolvedError {
   return { mapping: DEFAULT_ERROR_MAPPING, message: ErrorMessage.UNKNOWN_ERROR };
 }
 
-export async function GET(): Promise<NextResponse<ApiResponse<DocumentRouteData>>> {
-  try {
-    const docId = process.env[GoogleEnvVar.DOC_ID];
-    if (!docId) {
-      throw new Error(ErrorMessage.DOC_ID_REQUIRED);
+function resolveDocId(request: Request): string {
+  const { searchParams } = new URL(request.url);
+  const queryDocId = searchParams.get(ApiQueryParam.DOC_ID);
+
+  if (queryDocId !== null) {
+    if (!DOC_ID_REGEX.test(queryDocId)) {
+      throw new Error(ErrorMessage.DOC_ID_INVALID_FORMAT);
     }
+    return queryDocId;
+  }
+
+  const envDocId = process.env[GoogleEnvVar.DOC_ID];
+  if (!envDocId) {
+    throw new Error(ErrorMessage.DOC_ID_REQUIRED);
+  }
+  return envDocId;
+}
+
+export async function GET(
+  request: Request,
+): Promise<NextResponse<ApiResponse<DocumentRouteData>>> {
+  try {
+    const docId = resolveDocId(request);
 
     const googleDocs = new GoogleDocsService();
     const parser = new ParserService();

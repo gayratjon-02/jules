@@ -21,6 +21,7 @@ export enum MimeType {
 
 export enum ApiQueryParam {
   FILE_ID = "fileId",
+  DOC_ID = "docId",
 }
 
 export enum FetchErrorName {

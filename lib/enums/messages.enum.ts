@@ -51,4 +51,10 @@ export enum UiLabel {
   UPLOAD_ID = "ID",
   IMAGE_FALLBACK_PREFIX = "Image",
   IMAGE_FALLBACK_VIEW = "View on Drive",
+  DOC_URL_PLACEHOLDER = "Paste Google Doc URL or ID",
+  ANALYZE_BUTTON = "Analyze",
+  INVALID_URL_ERROR = "Please enter a valid Google Doc URL or ID",
+  RESET_TO_DEFAULT = "← Reset to default document",
+  ANALYZING_CUSTOM_DOC = "Analyzing custom document",
+  DEFAULT_DOC_LABEL = "Default sample document",
 }
