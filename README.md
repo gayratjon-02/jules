@@ -10,7 +10,7 @@ This tool automates that review. Paste any Google Doc URL, and within seconds th
 
 ## Demo
 
-- Live: `[Vercel link — added after deploy]`
+- Live: https://scalerrs-assessment.vercel.app
 - Repository: https://github.com/gayratjon-02/jules
 
 ## Quick Start
