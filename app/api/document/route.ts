@@ -6,7 +6,7 @@ import {
   HttpStatus,
   ParserPattern,
 } from "@/lib/enums";
-import { GoogleDocsService } from "@/lib/enums/googleDocs";
+import { GoogleDocsService } from "@/lib/googleDocs";
 import { ParserService } from "@/lib/parser";
 import { QualityCheckerService } from "@/lib/qualityChecker";
 import type { ApiResponse, DocumentRouteData } from "@/lib/types";
