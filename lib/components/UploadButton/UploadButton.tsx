@@ -1,46 +1,63 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { UiLabel } from "@/lib/enums";
-import type { DocumentId } from "@/lib/types";
+import type { ApiError } from "@/lib/types";
 
 interface UploadButtonProps {
-  onUploaded?: (documentId: DocumentId) => void;
+  onUpload: (file: File) => void;
+  isUploading: boolean;
+  uploadError?: ApiError | null;
+  uploadSuccess?: boolean;
 }
 
-export function UploadButton({ onUploaded }: UploadButtonProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const [busy, setBusy] = useState(false);
+const ACCEPTED_FILE_TYPES = ".docx,.html,.txt";
 
-  async function handleFile(file: File) {
-    setBusy(true);
-    try {
-      void file;
-      void onUploaded;
-    } finally {
-      setBusy(false);
-    }
-  }
+function resolveLabel(
+  isUploading: boolean,
+  uploadSuccess: boolean,
+  uploadError: ApiError | null | undefined,
+): UiLabel {
+  if (isUploading) return UiLabel.UPLOAD_BUTTON_BUSY;
+  if (uploadSuccess) return UiLabel.UPLOAD_SUCCESS;
+  if (uploadError) return UiLabel.UPLOAD_FAILED;
+  return UiLabel.UPLOAD_BUTTON_IDLE;
+}
+
+export function UploadButton({
+  onUpload,
+  isUploading,
+  uploadError = null,
+  uploadSuccess = false,
+}: UploadButtonProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const label = resolveLabel(isUploading, uploadSuccess, uploadError);
 
   return (
-    <div>
+    <div className="flex items-center gap-3">
+      {uploadError ? (
+        <span className="text-xs text-red-600">{uploadError.message}</span>
+      ) : null}
       <input
         ref={inputRef}
         type="file"
-        accept=".docx,.html,.txt"
+        accept={ACCEPTED_FILE_TYPES}
         className="hidden"
         onChange={(event) => {
           const file = event.target.files?.[0];
-          if (file) handleFile(file);
+          if (file) {
+            onUpload(file);
+            event.target.value = "";
+          }
         }}
       />
       <button
         type="button"
-        disabled={busy}
+        disabled={isUploading}
         onClick={() => inputRef.current?.click()}
-        className="rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        className="rounded-md bg-gray-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? UiLabel.UPLOAD_BUTTON_BUSY : UiLabel.UPLOAD_BUTTON_IDLE}
+        {label}
       </button>
     </div>
   );
