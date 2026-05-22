@@ -1,6 +1,7 @@
 "use client";
 
 import { ArticlePreview } from "@/lib/components/ArticlePreview";
+import { AlertIcon, RefreshIcon } from "@/lib/components/icons";
 import { MetaPanel } from "@/lib/components/MetaPanel";
 import { QualityPanel } from "@/lib/components/QualityPanel";
 import { UploadButton } from "@/lib/components/UploadButton";
@@ -23,49 +24,56 @@ export function ArticleCheckerScreen() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900">
-      <header className="sticky top-0 z-10 border-b border-gray-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <div>
-            <h1 className="text-base font-semibold text-gray-900">
-              {UiLabel.APP_TITLE}
-            </h1>
-            <p className="text-xs text-gray-500">{UiLabel.APP_SUBTITLE}</p>
-          </div>
-          <button
-            type="button"
-            onClick={refetch}
-            disabled={isLoading}
-            className="rounded-md border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {UiLabel.REFRESH}
-          </button>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50 text-slate-900">
+      <Header isLoading={isLoading} onRefresh={refetch} />
 
-      <main className="mx-auto max-w-7xl px-6 py-8 pb-32">
+      <main className="mx-auto max-w-7xl px-6 py-8 pb-32 lg:px-8">
         {isLoading ? (
-          <LoadingView />
+          <SkeletonGrid />
         ) : error ? (
-          <ErrorView error={error} onRetry={refetch} />
+          <ErrorCard error={error} onRetry={refetch} />
         ) : data ? (
           <ContentGrid data={data} />
         ) : null}
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 border-t border-gray-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
-          <UploadFeedback uploadResult={uploadResult} uploadError={uploadError} />
-          <UploadButton
-            onClick={handleUpload}
-            isUploading={isUploading}
-            isSuccess={uploadResult !== null}
-            isError={uploadError !== null}
-            disabled={data === null}
-          />
-        </div>
-      </footer>
+      <Footer
+        data={data}
+        isUploading={isUploading}
+        uploadError={uploadError}
+        uploadResult={uploadResult}
+        onUpload={handleUpload}
+      />
     </div>
+  );
+}
+
+interface HeaderProps {
+  isLoading: boolean;
+  onRefresh: () => void;
+}
+
+function Header({ isLoading, onRefresh }: HeaderProps) {
+  return (
+    <header className="sticky top-0 z-10 border-b border-slate-200 bg-white">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4 lg:px-8">
+        <div>
+          <h1 className="text-lg font-semibold tracking-tight text-slate-900">
+            {UiLabel.BRAND_NAME}
+          </h1>
+          <p className="text-xs text-slate-500">{UiLabel.APP_TAGLINE}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RefreshIcon className={isLoading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+          <span>{UiLabel.REFRESH}</span>
+        </button>
+      </div>
+    </header>
   );
 }
 
@@ -77,7 +85,7 @@ function ContentGrid({ data }: ContentGridProps) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="lg:col-span-2">
-        <ArticlePreview article={data.parsed.article} />
+        <ArticlePreview parsed={data.parsed} />
       </div>
       <div className="space-y-6">
         <QualityPanel report={data.report} />
@@ -87,36 +95,97 @@ function ContentGrid({ data }: ContentGridProps) {
   );
 }
 
-function LoadingView() {
+function SkeletonGrid() {
   return (
-    <div className="flex flex-col items-center justify-center py-24">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-200 border-t-gray-900" />
-      <p className="mt-4 text-sm text-gray-600">{UiLabel.LOADING}</p>
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <div className="lg:col-span-2">
+        <SkeletonCard lines={8} />
+      </div>
+      <div className="space-y-6">
+        <SkeletonCard lines={4} />
+        <SkeletonCard lines={3} />
+      </div>
     </div>
   );
 }
 
-interface ErrorViewProps {
+interface SkeletonCardProps {
+  lines: number;
+}
+
+function SkeletonCard({ lines }: SkeletonCardProps) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="h-5 w-1/3 animate-pulse rounded bg-slate-200" />
+      <div className="mt-5 space-y-3">
+        {Array.from({ length: lines }).map((_, index) => (
+          <div
+            key={index}
+            className="h-3 animate-pulse rounded bg-slate-100"
+            style={{ width: `${85 - (index % 4) * 10}%` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+interface ErrorCardProps {
   error: ApiError;
   onRetry: () => void;
 }
 
-function ErrorView({ error, onRetry }: ErrorViewProps) {
+function ErrorCard({ error, onRetry }: ErrorCardProps) {
   return (
-    <div className="mx-auto max-w-lg rounded-xl border border-red-200 bg-red-50 p-6 text-center shadow-sm">
-      <h2 className="text-base font-semibold text-red-900">
+    <div className="mx-auto mt-12 max-w-lg rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <AlertIcon className="h-6 w-6" />
+      </div>
+      <h2 className="mt-4 text-lg font-semibold text-slate-900">
         {UiLabel.ERROR_TITLE}
       </h2>
-      <p className="mt-2 text-sm text-red-700">{error.message}</p>
-      <p className="mt-1 font-mono text-xs text-red-500">{error.code}</p>
+      <p className="mt-2 text-sm text-slate-600">{error.message}</p>
+      <p className="mt-1 font-mono text-xs text-slate-400">{error.code}</p>
       <button
         type="button"
         onClick={onRetry}
-        className="mt-4 rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white shadow-sm transition hover:bg-red-700"
+        className="mt-5 inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
       >
-        {UiLabel.RETRY}
+        <RefreshIcon className="h-4 w-4" />
+        <span>{UiLabel.RETRY}</span>
       </button>
     </div>
+  );
+}
+
+interface FooterProps {
+  data: DocumentRouteData | null;
+  isUploading: boolean;
+  uploadError: ApiError | null;
+  uploadResult: UploadRouteData | null;
+  onUpload: () => void;
+}
+
+function Footer({
+  data,
+  isUploading,
+  uploadError,
+  uploadResult,
+  onUpload,
+}: FooterProps) {
+  return (
+    <footer className="fixed inset-x-0 bottom-0 border-t border-slate-200 bg-white">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 px-6 py-4 lg:px-8">
+        <UploadFeedback uploadResult={uploadResult} uploadError={uploadError} />
+        <UploadButton
+          onClick={onUpload}
+          isUploading={isUploading}
+          isSuccess={uploadResult !== null}
+          isError={uploadError !== null}
+          disabled={data === null}
+        />
+      </div>
+    </footer>
   );
 }
 
@@ -128,14 +197,17 @@ interface UploadFeedbackProps {
 function UploadFeedback({ uploadResult, uploadError }: UploadFeedbackProps) {
   if (uploadResult) {
     return (
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-600">
-        <span className="font-medium text-emerald-700">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+        <span className="font-semibold text-emerald-700">
           {uploadResult.destination}
         </span>
-        <span>
-          {UiLabel.UPLOADED_AT} {formatTime(uploadResult.uploadedAt)}
+        <span className="text-slate-600">
+          {UiLabel.UPLOADED_AT}{" "}
+          <span className="font-medium text-slate-900">
+            {formatTime(uploadResult.uploadedAt)}
+          </span>
         </span>
-        <span className="font-mono text-gray-500">
+        <span className="font-mono text-slate-500">
           {UiLabel.UPLOAD_ID} {uploadResult.uploadId}
         </span>
       </div>

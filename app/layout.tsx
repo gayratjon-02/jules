@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
 export const metadata: Metadata = {
-  title: "Scalerrs Assessment",
+  title: "Scalerrs · Article Quality Checker",
   description: "Google Docs powered article preview and quality check",
 };
 
@@ -12,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased min-h-screen bg-background text-foreground">
+    <html lang="en" className={inter.variable}>
+      <body className="min-h-screen bg-slate-50 font-sans text-slate-900 antialiased">
         {children}
       </body>
     </html>

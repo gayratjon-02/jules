@@ -1,20 +1,39 @@
-import { InfoMessage } from "@/lib/enums";
-import type { IArticle } from "@/lib/interfaces";
+import { InfoMessage, UiLabel } from "@/lib/enums";
+import type { IParsedDocument } from "@/lib/interfaces";
 
 interface ArticlePreviewProps {
-  article: IArticle;
+  parsed: IParsedDocument;
 }
 
-export function ArticlePreview({ article }: ArticlePreviewProps) {
+const PARAGRAPH_TAG_REGEX = /<p[\s>]/gi;
+const STATS_SEPARATOR = "·";
+
+export function ArticlePreview({ parsed }: ArticlePreviewProps) {
+  const { article, images, links } = parsed;
+  const paragraphCount = (article.html.match(PARAGRAPH_TAG_REGEX) ?? []).length;
+
   return (
-    <article className="rounded-xl border border-gray-200 bg-white shadow-sm">
-      <header className="border-b border-gray-100 px-6 py-5">
-        <h2 className="text-xl font-semibold text-gray-900">
+    <article className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <header className="border-b border-slate-200 px-8 py-6">
+        <h2 className="text-2xl font-bold tracking-tight text-slate-900">
           {article.title || InfoMessage.EMPTY_META}
         </h2>
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+          <span>
+            {UiLabel.STATS_PARAGRAPHS_EMOJI} {paragraphCount} {UiLabel.STATS_PARAGRAPHS}
+          </span>
+          <span aria-hidden="true">{STATS_SEPARATOR}</span>
+          <span>
+            {UiLabel.STATS_IMAGES_EMOJI} {images.length} {UiLabel.STATS_IMAGES}
+          </span>
+          <span aria-hidden="true">{STATS_SEPARATOR}</span>
+          <span>
+            {UiLabel.STATS_LINKS_EMOJI} {links.length} {UiLabel.STATS_LINKS}
+          </span>
+        </div>
       </header>
       <div
-        className="prose prose-sm max-w-none px-6 py-6 prose-headings:text-gray-900 prose-a:text-blue-600 prose-img:rounded-md"
+        className="prose prose-slate prose-lg max-w-none px-8 py-8 prose-img:rounded-lg prose-img:shadow-sm prose-a:text-indigo-600 prose-a:no-underline hover:prose-a:underline"
         dangerouslySetInnerHTML={{ __html: article.html }}
       />
     </article>

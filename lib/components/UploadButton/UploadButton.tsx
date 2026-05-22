@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckIcon, UploadCloudIcon } from "@/lib/components/icons";
 import { UiLabel } from "@/lib/enums";
 
 interface UploadButtonProps {
@@ -28,8 +29,8 @@ function resolveColorClass(
 ): string {
   if (isSuccess) return "bg-emerald-600 hover:bg-emerald-700";
   if (isError) return "bg-red-600 hover:bg-red-700";
-  if (isUploading) return "bg-blue-500";
-  return "bg-blue-600 hover:bg-blue-700";
+  if (isUploading) return "bg-indigo-500";
+  return "bg-indigo-600 hover:bg-indigo-700";
 }
 
 export function UploadButton({
@@ -47,37 +48,30 @@ export function UploadButton({
       type="button"
       onClick={onClick}
       disabled={disabled || isUploading}
-      className={`inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-50 ${colorClass}`}
+      className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all duration-150 ease-out hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-sm ${colorClass}`}
     >
-      {isUploading ? <Spinner /> : null}
-      {isSuccess && !isUploading ? <CheckIcon /> : null}
+      <ButtonIcon isUploading={isUploading} isSuccess={isSuccess} />
       <span>{label}</span>
     </button>
   );
 }
 
-function Spinner() {
-  return (
-    <span
-      aria-hidden="true"
-      className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white/30 border-t-white"
-    />
-  );
+interface ButtonIconProps {
+  isUploading: boolean;
+  isSuccess: boolean;
 }
 
-function CheckIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-4 w-4"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-    >
-      <path
-        fillRule="evenodd"
-        d="M16.704 5.29a1 1 0 010 1.42l-8 8a1 1 0 01-1.42 0l-4-4a1 1 0 011.42-1.42L8 12.586l7.29-7.296a1 1 0 011.414 0z"
-        clipRule="evenodd"
+function ButtonIcon({ isUploading, isSuccess }: ButtonIconProps) {
+  if (isUploading) {
+    return (
+      <span
+        aria-hidden="true"
+        className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
       />
-    </svg>
-  );
+    );
+  }
+  if (isSuccess) {
+    return <CheckIcon className="h-4 w-4" />;
+  }
+  return <UploadCloudIcon className="h-4 w-4" />;
 }
